@@ -1,5 +1,4 @@
 # Python Container Builder
-
 A shortcut to packaging your Python code with requirement dependencies into a Distroless image.
 
 ## Getting Started
@@ -8,7 +7,7 @@ A shortcut to packaging your Python code with requirement dependencies into a Di
 - Have a method of building containers, either locally or in Github Actions (or similar CI orchestrator).
 
 ### Quickstart Example
-> Assume I have a standalone Python file, `main.py`, in the root folder of my repo requiring dependencies that are declared in `requirements.txt`.
+> I have a standalone Python file, `main.py`, in the root folder of my repo requiring dependencies that are declared in `requirements.txt`.
 ```
 FROM ghcr.io/jski/python-container-builder:latest as build-venv
 COPY requirements.txt /requirements.txt
@@ -23,7 +22,7 @@ ENTRYPOINT ["/venv/bin/python3", "-u", "main.py"]
 
 ### Usage/Explanation
 1. Declare the base image as the top FROM line in your Dockerfile.
-2. Copy your requirements file from your application repo, and run pip install from a virtualenv. 
+2. Copy your requirements or configuration files from your application repo, and run pip install from a virtualenv. 
 3. Declare the final distroless container image you'll use for runtime.
 4. Copy the virtualenv you built in the first phase of the build.
 5. Move your application files to the proper location on the filesystem, and setup your workdir and entrypoint. All done!
