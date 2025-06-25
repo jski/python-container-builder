@@ -1,11 +1,18 @@
 # Python Container Builder
+[![Build & Deploy Nightly](https://github.com/jski/python-container-builder/actions/workflows/build-and-push.yml/badge.svg?branch=main)](https://github.com/jski/python-container-builder/actions/workflows/build-and-push.yml)
+
 A shortcut to packaging your Python code with requirement dependencies into a Distroless image.
 
-## Getting Started
-### Prerequisites
-- Have Python code you wish to package in a distroless container image.
-- Have a method of building containers, either locally or in Github Actions (or similar CI orchestrator).
+## Goals
+This project seeks to:
+- Simplify the build/packaging process for simple Python projects.
+- Reduce usage of Github Actions free tier minutes for said projects by doing the most time-intensive part up front here instead.
+- Offer an base image that supports packaging into a final distroless runtime.
+- Keep up to date with package updates to the Debian-based build image without having to think about it.
+- Support both `linux/arm64` and `linux/amd64` build options.
+- Be publicly available for use without needing to login to a registry.
 
+## Getting Started
 ### Quickstart Example
 > I have a standalone Python file, `main.py`, in the root folder of my repo requiring dependencies that are declared in `requirements.txt`.
 ```
