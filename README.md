@@ -11,6 +11,7 @@ This project seeks to:
 - Keep up to date with package updates to the Debian-based build image without having to think about it.
 - Support both `linux/arm64` and `linux/amd64` build options.
 - Be publicly available for use without needing to login to a registry.
+- Include `uv` as I like it in my Python toolchain.
 
 ## Getting Started
 ### Quickstart Example
@@ -18,7 +19,7 @@ This project seeks to:
 ```
 FROM ghcr.io/jski/python-container-builder:latest as build-venv
 COPY requirements.txt /requirements.txt
-RUN /venv/bin/pip install --disable-pip-version-check -r /requirements.txt
+RUN uv pip install -r /requirements.txt
 
 FROM gcr.io/distroless/python3-debian12
 COPY --from=build-venv /venv /venv
