@@ -1,5 +1,7 @@
 # Python Container Builder
 [![Build & Deploy Nightly](https://github.com/jski/python-container-builder/actions/workflows/build-and-push.yml/badge.svg?branch=main)](https://github.com/jski/python-container-builder/actions/workflows/build-and-push.yml)
+[![Python Versions](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue)](https://github.com/jski/python-container-builder)
+[![Platform Support](https://img.shields.io/badge/platform-linux%2Famd64%20%7C%20linux%2Farm64-blue)](https://github.com/jski/python-container-builder)
 
 A shortcut to packaging your Python code with requirement dependencies into a Distroless image.
 
@@ -27,6 +29,14 @@ These images use a **hybrid multi-stage build**:
 4. Pre-create a virtual environment at `/.venv`
 
 This approach gives you the reliability of official Python builds while maintaining full control over the base system and dependencies.
+
+### Security
+
+This project includes automated security measures:
+- 🔒 **Nightly Vulnerability Scanning**: All images scanned with [Trivy](https://github.com/aquasecurity/trivy) for CRITICAL and HIGH severity vulnerabilities
+- 🔄 **Automated Dependency Updates**: [Dependabot](https://github.com/dependabot) monitors base images and GitHub Actions for security updates
+- 📊 **Transparent Results**: Scan results available in the [Security tab](https://github.com/jski/python-container-builder/security/code-scanning)
+- 🏗️ **Official Base Images**: Built from official Python and Debian Docker images, ensuring timely security patches
 
 ## Goals
 This project seeks to:
