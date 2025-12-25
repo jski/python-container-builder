@@ -1,5 +1,5 @@
 # Build stage: Install dependencies with system build tools
-FROM ghcr.io/jski/python-container-builder:3.12 as build-venv
+FROM ghcr.io/jski/python-container-builder:3.11 AS build-venv
 
 # Install build dependencies required for NumPy/Pandas compilation
 # These packages are needed to build native extensions
@@ -21,17 +21,19 @@ COPY sample_data.csv /app/sample_data.csv
 # Runtime stage: Minimal distroless image
 FROM gcr.io/distroless/python3-debian12
 
-# Copy virtual environment and application
+# Copy Python installation and virtual environment from build stage
+COPY --from=build-venv /usr/local /usr/local
 COPY --from=build-venv /.venv /.venv
 COPY --from=build-venv /app /app
 
 # Copy required runtime libraries for NumPy/Pandas
 # These shared libraries are needed to run the compiled extensions
-COPY --from=build-venv /usr/lib/x86_64-linux-gnu/libgfortran.so.5* /usr/lib/x86_64-linux-gnu/
-COPY --from=build-venv /usr/lib/x86_64-linux-gnu/libopenblas.so.0* /usr/lib/x86_64-linux-gnu/
-COPY --from=build-venv /usr/lib/x86_64-linux-gnu/libquadmath.so.0* /usr/lib/x86_64-linux-gnu/
+COPY --from=build-venv /usr/lib/*-linux-gnu*/libgfortran.so.5* /usr/lib/
+COPY --from=build-venv /usr/lib/*-linux-gnu*/libopenblas.so.0* /usr/lib/
+COPY --from=build-venv /usr/lib/*-linux-gnu*/libquadmath.so.0* /usr/lib/
+COPY --from=build-venv /usr/lib/*-linux-gnu*/libgcc_s.so.1* /usr/lib/
 
 WORKDIR /app
 
-# Run the analysis script
+# Run the analysis script using venv Python
 ENTRYPOINT ["/.venv/bin/python3", "-u", "analyze.py"]
