@@ -5,6 +5,34 @@
 
 A shortcut to packaging your Python code with requirement dependencies into a Distroless image.
 
+## Quickstart
+
+Build a minimal Python container in minutes:
+
+```dockerfile
+FROM ghcr.io/jski/python-container-builder:3.12 AS build-venv
+COPY requirements.txt /requirements.txt
+RUN uv pip install -r /requirements.txt
+
+FROM gcr.io/distroless/python3-debian12
+COPY --from=build-venv /usr/local /usr/local
+COPY --from=build-venv /.venv /.venv
+COPY /main.py /app/main.py
+WORKDIR /app
+ENTRYPOINT ["/.venv/bin/python3", "-u", "main.py"]
+```
+
+That's it! Your Python app is now packaged in a secure, minimal distroless container.
+
+**What you get:**
+- ✅ Fast builds with `uv` (10-20x faster than pip)
+- ✅ Multiple package managers available: `uv`, `poetry`, `pipenv`, `pdm`, and standard `pip`
+- ✅ Secure distroless runtime (no shell, package manager, or unnecessary tools)
+- ✅ Multi-architecture support (amd64 + arm64)
+- ✅ Python 3.9 through 3.14 available
+
+**[View complete examples →](examples/)** | **[See all Python versions ↓](#supported-python-versions)**
+
 ## Supported Python Versions
 
 This project provides pre-built images for multiple Python versions, using a hybrid approach that extracts Python from official images and installs it on a clean, customizable Debian base:
@@ -25,7 +53,7 @@ All images support both `linux/amd64` and `linux/arm64` architectures.
 These images use a **hybrid multi-stage build**:
 1. Extract Python from official `python:X.Y-slim-debian` images (ensures reliability and latest patches)
 2. Copy Python into a clean `debian:X-slim` base (full control over dependencies)
-3. Add `uv` for fast package installation
+3. Add modern package managers: `uv`, `poetry`, `pipenv`, `pdm`, and `pip`
 4. Pre-create a virtual environment at `/.venv`
 
 This approach gives you the reliability of official Python builds while maintaining full control over the base system and dependencies.
@@ -47,55 +75,7 @@ This project seeks to:
 - Keep up to date with package updates automatically via nightly builds.
 - Support both `linux/arm64` and `linux/amd64` architectures.
 - Be publicly available for use without needing to login to a registry.
-- Include `uv` for fast, modern Python package management.
-
-## Getting Started
-### Quickstart Example
-> I have a standalone Python file, `main.py`, in the root folder of my repo requiring dependencies that are declared in `requirements.txt`.
-
-**Using Python 3.14 (latest):**
-```dockerfile
-FROM ghcr.io/jski/python-container-builder:latest AS build-venv
-COPY requirements.txt /requirements.txt
-RUN uv pip install -r /requirements.txt
-
-FROM gcr.io/distroless/python3-debian12
-COPY --from=build-venv /usr/local /usr/local
-COPY --from=build-venv /.venv /.venv
-COPY /main.py /app/main.py
-WORKDIR /app
-ENTRYPOINT ["/.venv/bin/python3", "-u", "main.py"]
-```
-
-**Using Python 3.12 (stable):**
-```dockerfile
-FROM ghcr.io/jski/python-container-builder:3.12 AS build-venv
-COPY requirements.txt /requirements.txt
-RUN uv pip install -r /requirements.txt
-
-FROM gcr.io/distroless/python3-debian12
-COPY --from=build-venv /usr/local /usr/local
-COPY --from=build-venv /.venv /.venv
-COPY /main.py /app/main.py
-WORKDIR /app
-ENTRYPOINT ["/.venv/bin/python3", "-u", "main.py"]
-```
-
-**Using Python 3.10 (for older projects):**
-```dockerfile
-FROM ghcr.io/jski/python-container-builder:3.10 AS build-venv
-COPY requirements.txt /requirements.txt
-RUN uv pip install -r /requirements.txt
-
-FROM gcr.io/distroless/python3-debian11
-COPY --from=build-venv /usr/local /usr/local
-COPY --from=build-venv /.venv /.venv
-COPY /main.py /app/main.py
-WORKDIR /app
-ENTRYPOINT ["/.venv/bin/python3", "-u", "main.py"]
-```
-
-> **Note**: When using Python 3.9 or 3.10, make sure to use `gcr.io/distroless/python3-debian11` as your runtime image. For Python 3.11 and above, use `gcr.io/distroless/python3-debian12`. The venv uses Python from `/usr/local` which is copied from the build stage.
+- Include modern Python package managers: `uv`, `poetry`, `pipenv`, `pdm`, and `pip`.
 
 ## Examples
 
@@ -107,12 +87,42 @@ Ready-to-use examples for common use cases:
 
 Each example includes complete working code, Dockerfile, and detailed explanations. [Browse all examples →](examples/)
 
-### Usage/Explanation
+## Usage
+
+### Choosing a Python Version
+
+Use the appropriate image tag and distroless runtime for your Python version:
+
+| Build Image | Distroless Runtime | Use Case |
+|-------------|-------------------|----------|
+| `:3.14` or `:latest` | `python3-debian12` | Latest features |
+| `:3.12` | `python3-debian12` | Recommended for most projects |
+| `:3.11` | `python3-debian12` | Long-term stable |
+| `:3.10` | `python3-debian11` | Older projects |
+| `:3.9` | `python3-debian11` | Legacy compatibility |
+
+> **Note**: When using Python 3.9 or 3.10, use `gcr.io/distroless/python3-debian11` as your runtime. For Python 3.11+, use `gcr.io/distroless/python3-debian12`.
+
+### How It Works
 1. Choose your Python version and declare the corresponding base image as the top FROM line in your Dockerfile (e.g., `:3.12`, `:3.14`, or `:latest`).
 2. Copy your requirements or configuration files from your application repo, and run `uv pip install` (or `pip install`) from a virtualenv.
 3. Declare the final distroless container image you'll use for runtime, matching the Debian version to your Python version (see table above).
 4. Copy the virtualenv you built in the first phase of the build.
 5. Move your application files to the proper location on the filesystem, and setup your workdir and entrypoint. All done!
+
+### Package Manager Options
+
+All images include multiple package managers to support different workflows:
+
+| Package Manager | Speed | Best For | Example |
+|----------------|-------|----------|---------|
+| **uv** | Fastest (10-20x) | Most projects, CI/CD | `uv pip install -r requirements.txt` |
+| **pip** | Standard | Simple projects, compatibility | `pip install -r requirements.txt` |
+| **poetry** | Modern | Dependency resolution, lock files | `poetry install --only main` |
+| **pipenv** | Modern | Development/production separation | `pipenv install --deploy` |
+| **pdm** | Modern | PEP 582, modern standards | `pdm install --prod` |
+
+**Recommendation**: Use `uv` for the fastest builds. See [examples/poetry-cli](examples/poetry-cli/) for a Poetry example.
 
 ### Why?
 I have a lot of personal projects that I run in Github Actions in private repositories; Github offers generous limits to their free tier, but for the sake of simplification, I moved the most costly part (initializing a base Python build image based on Debian with what I usually need) to this public repo, which isn't charged. So now I have made all my workloads faster, and hopefully someone else will get benefit from this as well!
