@@ -90,3 +90,43 @@ jobs:
           image-ref: ghcr.io/${{ github.repository_owner }}/python-container-builder:latest
           format: 'table'
           severity: 'CRITICAL,HIGH'
+
+  test:
+    name: Test Images
+    runs-on: ubuntu-latest
+    needs: nightly
+    strategy:
+      matrix:
+        python_version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - name: Test Python version
+        run: |
+          docker run --rm ghcr.io/${{ github.repository_owner }}/python-container-builder:${{ matrix.python_version }} python --version
+
+      - name: Test uv is installed
+        run: |
+          docker run --rm ghcr.io/${{ github.repository_owner }}/python-container-builder:${{ matrix.python_version }} uv --version
+
+      - name: Test poetry is installed
+        run: |
+          docker run --rm ghcr.io/${{ github.repository_owner }}/python-container-builder:${{ matrix.python_version }} poetry --version
+
+      - name: Test pipenv is installed
+        run: |
+          docker run --rm ghcr.io/${{ github.repository_owner }}/python-container-builder:${{ matrix.python_version }} pipenv --version
+
+      - name: Test pdm is installed
+        run: |
+          docker run --rm ghcr.io/${{ github.repository_owner }}/python-container-builder:${{ matrix.python_version }} pdm --version
+
+      - name: Test venv is created
+        run: |
+          docker run --rm ghcr.io/${{ github.repository_owner }}/python-container-builder:${{ matrix.python_version }} sh -c 'test -d /.venv && echo "venv exists"'
+
+      - name: Test package installation with uv
+        run: |
+          docker run --rm ghcr.io/${{ github.repository_owner }}/python-container-builder:${{ matrix.python_version }} sh -c 'uv pip install requests && python -c "import requests; print(f\"requests {requests.__version__} imported successfully\")"'
+
+      - name: Test package installation with pip
+        run: |
+          docker run --rm ghcr.io/${{ github.repository_owner }}/python-container-builder:${{ matrix.python_version }} sh -c 'pip install click && python -c "import click; print(f\"click {click.__version__} imported successfully\")"'
