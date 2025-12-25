@@ -55,11 +55,12 @@ This project seeks to:
 
 **Using Python 3.14 (latest):**
 ```dockerfile
-FROM ghcr.io/jski/python-container-builder:latest as build-venv
+FROM ghcr.io/jski/python-container-builder:latest AS build-venv
 COPY requirements.txt /requirements.txt
 RUN uv pip install -r /requirements.txt
 
 FROM gcr.io/distroless/python3-debian12
+COPY --from=build-venv /usr/local /usr/local
 COPY --from=build-venv /.venv /.venv
 COPY /main.py /app/main.py
 WORKDIR /app
@@ -68,11 +69,12 @@ ENTRYPOINT ["/.venv/bin/python3", "-u", "main.py"]
 
 **Using Python 3.12 (stable):**
 ```dockerfile
-FROM ghcr.io/jski/python-container-builder:3.12 as build-venv
+FROM ghcr.io/jski/python-container-builder:3.12 AS build-venv
 COPY requirements.txt /requirements.txt
 RUN uv pip install -r /requirements.txt
 
 FROM gcr.io/distroless/python3-debian12
+COPY --from=build-venv /usr/local /usr/local
 COPY --from=build-venv /.venv /.venv
 COPY /main.py /app/main.py
 WORKDIR /app
@@ -81,18 +83,29 @@ ENTRYPOINT ["/.venv/bin/python3", "-u", "main.py"]
 
 **Using Python 3.10 (for older projects):**
 ```dockerfile
-FROM ghcr.io/jski/python-container-builder:3.10 as build-venv
+FROM ghcr.io/jski/python-container-builder:3.10 AS build-venv
 COPY requirements.txt /requirements.txt
 RUN uv pip install -r /requirements.txt
 
 FROM gcr.io/distroless/python3-debian11
+COPY --from=build-venv /usr/local /usr/local
 COPY --from=build-venv /.venv /.venv
 COPY /main.py /app/main.py
 WORKDIR /app
 ENTRYPOINT ["/.venv/bin/python3", "-u", "main.py"]
 ```
 
-> **Note**: When using Python 3.9 or 3.10, make sure to use `gcr.io/distroless/python3-debian11` as your runtime image. For Python 3.11 and above, use `gcr.io/distroless/python3-debian12`.
+> **Note**: When using Python 3.9 or 3.10, make sure to use `gcr.io/distroless/python3-debian11` as your runtime image. For Python 3.11 and above, use `gcr.io/distroless/python3-debian12`. The venv uses Python from `/usr/local` which is copied from the build stage.
+
+## Examples
+
+Ready-to-use examples for common use cases:
+
+- **[FastAPI Web Service](examples/fastapi/)** - REST API with dependencies
+- **[Poetry CLI Tool](examples/poetry-cli/)** - CLI application using Poetry for dependency management
+- **[Data Science](examples/data-science/)** - NumPy/Pandas with system dependencies
+
+Each example includes complete working code, Dockerfile, and detailed explanations. [Browse all examples →](examples/)
 
 ### Usage/Explanation
 1. Choose your Python version and declare the corresponding base image as the top FROM line in your Dockerfile (e.g., `:3.12`, `:3.14`, or `:latest`).

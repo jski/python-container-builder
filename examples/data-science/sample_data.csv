@@ -1,0 +1,16 @@
+id,product,category,price,quantity,revenue
+1,Laptop,Electronics,999.99,15,14999.85
+2,Mouse,Electronics,29.99,50,1499.50
+3,Keyboard,Electronics,79.99,35,2799.65
+4,Monitor,Electronics,299.99,20,5999.80
+5,Desk Chair,Furniture,199.99,12,2399.88
+6,Desk,Furniture,349.99,8,2799.92
+7,Notebook,Office Supplies,4.99,200,998.00
+8,Pen Set,Office Supplies,12.99,150,1948.50
+9,Webcam,Electronics,89.99,25,2249.75
+10,Headphones,Electronics,149.99,30,4499.70
+11,USB Cable,Electronics,9.99,100,999.00
+12,Bookshelf,Furniture,149.99,10,1499.90
+13,Lamp,Furniture,39.99,40,1599.60
+14,Paper Ream,Office Supplies,24.99,75,1874.25
+15,Stapler,Office Supplies,14.99,60,899.40
