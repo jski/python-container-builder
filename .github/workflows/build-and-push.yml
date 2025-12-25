@@ -11,6 +11,21 @@ jobs:
     permissions:
       contents: read
       packages: write
+    strategy:
+      matrix:
+        include:
+          - python_version: "3.9"
+            debian_version: "bullseye"
+          - python_version: "3.10"
+            debian_version: "bullseye"
+          - python_version: "3.11"
+            debian_version: "bookworm"
+          - python_version: "3.12"
+            debian_version: "bookworm"
+          - python_version: "3.13"
+            debian_version: "bookworm"
+          - python_version: "3.14"
+            debian_version: "bookworm"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -37,6 +52,11 @@ jobs:
           file: Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/python-container-builder:latest
+          build-args: |
+            DEBIAN_VERSION=${{ matrix.debian_version }}
+            PYTHON_VERSION=${{ matrix.python_version }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/python-container-builder:${{ matrix.python_version }}
+            ${{ matrix.python_version == '3.14' && format('ghcr.io/{0}/python-container-builder:latest', github.repository_owner) || '' }}
           provenance: false
           outputs: type=image,name=python-container-builder,annotation-index.org.opencontainers.image.description=build your Python distroless containers with this
