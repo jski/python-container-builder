@@ -1,5 +1,5 @@
 # Build stage: Install dependencies in virtual environment
-FROM ghcr.io/jski/python-container-builder:3.12 as build-venv
+FROM ghcr.io/jski/python-container-builder:3.11 AS build-venv
 
 COPY requirements.txt /requirements.txt
 RUN uv pip install -r /requirements.txt
@@ -7,7 +7,8 @@ RUN uv pip install -r /requirements.txt
 # Runtime stage: Minimal distroless image
 FROM gcr.io/distroless/python3-debian12
 
-# Copy virtual environment from build stage
+# Copy Python installation and virtual environment from build stage
+COPY --from=build-venv /usr/local /usr/local
 COPY --from=build-venv /.venv /.venv
 
 # Copy application code
@@ -19,5 +20,5 @@ WORKDIR /app
 # Expose port
 EXPOSE 8000
 
-# Run the application
+# Run the application using venv Python
 ENTRYPOINT ["/.venv/bin/python3", "-u", "main.py"]

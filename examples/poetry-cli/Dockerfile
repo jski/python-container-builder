@@ -1,15 +1,13 @@
 # Build stage: Use Poetry to export dependencies
-FROM ghcr.io/jski/python-container-builder:3.12 as build-venv
+FROM ghcr.io/jski/python-container-builder:3.11 AS build-venv
 
 # Copy Poetry files
 COPY pyproject.toml poetry.lock* /
 
-# Export Poetry dependencies to requirements.txt format
-# This is faster and more compatible with uv than installing Poetry in the container
-RUN poetry export --without-hashes --format=requirements.txt > requirements.txt
-
-# Install dependencies using uv (much faster than pip)
-RUN uv pip install -r requirements.txt
+# Install dependencies using Poetry directly
+# Configure Poetry to not create its own venv (use the existing one)
+RUN poetry config virtualenvs.create false && \
+    poetry install --only main --no-root
 
 # Copy application code
 COPY cli.py /app/cli.py
@@ -17,11 +15,12 @@ COPY cli.py /app/cli.py
 # Runtime stage: Minimal distroless image
 FROM gcr.io/distroless/python3-debian12
 
-# Copy virtual environment and application
+# Copy Python installation and virtual environment from build stage
+COPY --from=build-venv /usr/local /usr/local
 COPY --from=build-venv /.venv /.venv
 COPY --from=build-venv /app /app
 
 WORKDIR /app
 
-# Run the CLI application
+# Run the CLI application using venv Python
 ENTRYPOINT ["/.venv/bin/python3", "-u", "cli.py"]
