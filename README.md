@@ -94,6 +94,16 @@ ENTRYPOINT ["/.venv/bin/python3", "-u", "main.py"]
 
 > **Note**: When using Python 3.9 or 3.10, make sure to use `gcr.io/distroless/python3-debian11` as your runtime image. For Python 3.11 and above, use `gcr.io/distroless/python3-debian12`.
 
+## Examples
+
+Ready-to-use examples for common use cases:
+
+- **[FastAPI Web Service](examples/fastapi/)** - REST API with dependencies
+- **[Poetry CLI Tool](examples/poetry-cli/)** - CLI application using Poetry for dependency management
+- **[Data Science](examples/data-science/)** - NumPy/Pandas with system dependencies
+
+Each example includes complete working code, Dockerfile, and detailed explanations. [Browse all examples →](examples/)
+
 ### Usage/Explanation
 1. Choose your Python version and declare the corresponding base image as the top FROM line in your Dockerfile (e.g., `:3.12`, `:3.14`, or `:latest`).
 2. Copy your requirements or configuration files from your application repo, and run `uv pip install` (or `pip install`) from a virtualenv.
