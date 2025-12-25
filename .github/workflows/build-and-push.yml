@@ -60,3 +60,33 @@ jobs:
             ${{ matrix.python_version == '3.14' && format('ghcr.io/{0}/python-container-builder:latest', github.repository_owner) || '' }}
           provenance: false
           outputs: type=image,name=python-container-builder,annotation-index.org.opencontainers.image.description=build your Python distroless containers with this
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: nightly
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ github.repository_owner }}/python-container-builder:latest
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Print Trivy results summary
+        uses: aquasecurity/trivy-action@master
+        if: always()
+        with:
+          image-ref: ghcr.io/${{ github.repository_owner }}/python-container-builder:latest
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
