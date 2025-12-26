@@ -38,5 +38,6 @@ RUN uv venv
 ENV VIRTUAL_ENV=/.venv
 ENV PATH="/bin:$VIRTUAL_ENV/bin:$PATH"
 
-# Install modern Python package managers for completeness
-RUN uv pip install --no-cache poetry pipenv pdm
+# Install pip in the virtualenv for standard pip usage
+# Then install other modern Python package managers
+RUN uv pip install --no-cache pip poetry pipenv pdm
