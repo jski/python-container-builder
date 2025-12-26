@@ -96,8 +96,21 @@ jobs:
               debian="bookworm"
             fi
 
-            # Update the line in the table
-            sed -i "s/| ${minor} | \`:${minor}\` | \`python:${minor}-slim-${debian}\` |/| ${minor} | \`:${minor}\` | \`python:${minor}-slim-${debian}\` (${version}) |/g" README.md
+            # Check if this is the latest Python version (has ":latest" tag)
+            # Currently 3.14, but will be 3.15, 3.16, etc. in the future
+            if grep -q "| ${minor} | \`:${minor}\` or \`:latest\` |" README.md; then
+              # Handle version with :latest tag
+              # First try to update existing version
+              sed -i "s/| ${minor} | \`:${minor}\` or \`:latest\` | \`python:${minor}-slim-${debian}\` ([^)]*) |/| ${minor} | \`:${minor}\` or \`:latest\` | \`python:${minor}-slim-${debian}\` (${version}) |/g" README.md
+              # If no existing version, add it
+              sed -i "s/| ${minor} | \`:${minor}\` or \`:latest\` | \`python:${minor}-slim-${debian}\` |/| ${minor} | \`:${minor}\` or \`:latest\` | \`python:${minor}-slim-${debian}\` (${version}) |/g" README.md
+            else
+              # Handle regular version without :latest tag
+              # First try to update existing version
+              sed -i "s/| ${minor} | \`:${minor}\` | \`python:${minor}-slim-${debian}\` ([^)]*) |/| ${minor} | \`:${minor}\` | \`python:${minor}-slim-${debian}\` (${version}) |/g" README.md
+              # If no existing version, add it
+              sed -i "s/| ${minor} | \`:${minor}\` | \`python:${minor}-slim-${debian}\` |/| ${minor} | \`:${minor}\` | \`python:${minor}-slim-${debian}\` (${version}) |/g" README.md
+            fi
           done
 
           # Check if there were changes
@@ -138,6 +151,35 @@ jobs:
           sed -i "s/matrix.python_version == '3.14'/matrix.python_version == '${NEW_VERSION}'/" $WORKFLOW_FILE
 
           echo "Workflow updated to include Python ${NEW_VERSION}"
+
+          # Update README table to add new minor version
+          echo "Adding Python ${NEW_VERSION} to README table..."
+
+          # Find the current "latest" version line (currently 3.14)
+          CURRENT_LATEST=$(grep -E "\\| [0-9.]+ \\| \`:[0-9.]+\` or \`:latest\`" README.md | sed -E 's/.*\| ([0-9.]+) \| .*/\1/' | head -1)
+
+          if [ -n "$CURRENT_LATEST" ]; then
+            echo "Current latest version: ${CURRENT_LATEST}"
+
+            # Remove ":latest" tag from current latest version
+            sed -i "s/| ${CURRENT_LATEST} | \`:${CURRENT_LATEST}\` or \`:latest\` |/| ${CURRENT_LATEST} | \`:${CURRENT_LATEST}\` |/g" README.md
+
+            # Get the distroless version for the current latest (to use as template)
+            DISTROLESS=$(grep "| ${CURRENT_LATEST} |" README.md | sed -E 's/.*gcr.io\/distroless\/(python3-debian[0-9]+).*/\1/' | head -1)
+            DISTROLESS="gcr.io/distroless/${DISTROLESS}"
+
+            # Add new row after current latest with :latest tag
+            # The new version will use bookworm (Debian 12) as it's a recent Python version
+            NEW_ROW="| ${NEW_VERSION} | \`:${NEW_VERSION}\` or \`:latest\` | \`python:${NEW_VERSION}-slim-bookworm\` (${VERSION}) | \`debian:bookworm-slim\` | \`${DISTROLESS}\` |"
+
+            # Insert new row after the previous latest (GNU sed syntax)
+            sed -i "/| ${CURRENT_LATEST} |/a\\${NEW_ROW}" README.md
+
+            echo "Added new row for Python ${NEW_VERSION} with :latest tag"
+            echo "Removed :latest tag from Python ${CURRENT_LATEST}"
+          else
+            echo "Warning: Could not find current latest version in README"
+          fi
 
       - name: Create Pull Request
         if: steps.update-readme.outputs.changes_detected == 'true' || steps.check.outputs.new_minor_version
