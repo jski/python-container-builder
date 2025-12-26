@@ -39,12 +39,12 @@ This project provides pre-built images for multiple Python versions, using a hyb
 
 | Python Version | Image Tag | Python Source | Debian Base | Distroless Runtime |
 |----------------|-----------|---------------|-------------|-------------------|
-| 3.9 | `:3.9` | `python:3.9-slim-bullseye` | `debian:bullseye-slim` | `gcr.io/distroless/python3-debian11` |
-| 3.10 | `:3.10` | `python:3.10-slim-bullseye` | `debian:bullseye-slim` | `gcr.io/distroless/python3-debian11` |
-| 3.11 | `:3.11` | `python:3.11-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
-| 3.12 | `:3.12` | `python:3.12-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
-| 3.13 | `:3.13` | `python:3.13-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
-| 3.14 | `:3.14` or `:latest` | `python:3.14-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
+| 3.9 | `:3.9` | `python:3.9-slim-bullseye` (3.9.23) | `debian:bullseye-slim` | `gcr.io/distroless/python3-debian11` |
+| 3.10 | `:3.10` | `python:3.10-slim-bullseye` (3.10.18) | `debian:bullseye-slim` | `gcr.io/distroless/python3-debian11` |
+| 3.11 | `:3.11` | `python:3.11-slim-bookworm` (3.11.14) | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
+| 3.12 | `:3.12` | `python:3.12-slim-bookworm` (3.12.12) | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
+| 3.13 | `:3.13` | `python:3.13-slim-bookworm` (3.13.11) | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
+| 3.14 | `:3.14` or `:latest` | `python:3.14-slim-bookworm` (3.14.2) | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
 
 All images support both `linux/amd64` and `linux/arm64` architectures.
 
