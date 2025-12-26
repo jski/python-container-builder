@@ -226,8 +226,8 @@ jobs:
 
       - name: Test package installation with uv
         run: |
-          docker run --rm ghcr.io/${{ github.repository_owner }}/python-container-builder:${{ matrix.python_version }}-${{ github.sha }} sh -c 'uv pip install requests && python -c "import requests; print(f\"requests {requests.__version__} imported successfully\")"'
+          docker run --rm ghcr.io/${{ github.repository_owner }}/python-container-builder:${{ matrix.python_version }}-${{ github.sha }} sh -c 'uv pip install requests && /.venv/bin/python -c "import requests; print(f\"requests {requests.__version__} imported successfully\")"'
 
       - name: Test package installation with pip
         run: |
-          docker run --rm ghcr.io/${{ github.repository_owner }}/python-container-builder:${{ matrix.python_version }}-${{ github.sha }} sh -c 'pip install click && python -c "import click; print(f\"click {click.__version__} imported successfully\")"'
+          docker run --rm ghcr.io/${{ github.repository_owner }}/python-container-builder:${{ matrix.python_version }}-${{ github.sha }} sh -c '/.venv/bin/pip install click && /.venv/bin/python -c "import click; print(f\"click {click.__version__} imported successfully\")"'
