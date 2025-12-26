@@ -1,0 +1,218 @@
+name: Check Python Versions
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday at midnight UTC
+  workflow_dispatch:
+
+jobs:
+  check-versions:
+    name: Check for Python version updates
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Check current Python versions
+        id: check
+        run: |
+          echo "Checking Python versions from official images..."
+
+          # Initialize arrays
+          declare -A current_versions
+          declare -A new_versions
+
+          # Current minor versions we support
+          MINOR_VERSIONS=("3.9" "3.10" "3.11" "3.12" "3.13" "3.14")
+
+          # Check each version
+          for minor in "${MINOR_VERSIONS[@]}"; do
+            # Determine debian version
+            if [[ "$minor" == "3.9" || "$minor" == "3.10" ]]; then
+              debian="bullseye"
+            else
+              debian="bookworm"
+            fi
+
+            echo "Checking Python ${minor} (${debian})..."
+
+            # Get actual version from official image
+            version=$(docker run --rm python:${minor}-slim-${debian} python --version 2>&1 | grep -oP 'Python \K[\d.]+' || echo "")
+
+            if [ -n "$version" ]; then
+              current_versions[$minor]=$version
+              echo "  Found: $version"
+            else
+              echo "  ERROR: Could not detect version for ${minor}"
+              current_versions[$minor]="unknown"
+            fi
+          done
+
+          # Check for Python 3.15 (future version)
+          echo "Checking for Python 3.15..."
+          if docker pull python:3.15-slim-bookworm 2>/dev/null; then
+            version=$(docker run --rm python:3.15-slim-bookworm python --version 2>&1 | grep -oP 'Python \K[\d.]+' || echo "")
+            if [ -n "$version" ]; then
+              echo "  NEW VERSION FOUND: Python 3.15 ($version)"
+              current_versions["3.15"]=$version
+              echo "new_minor_version=3.15" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "  Python 3.15 not yet available"
+          fi
+
+          # Save versions to file for next step
+          for minor in "${!current_versions[@]}"; do
+            echo "${minor}=${current_versions[$minor]}" >> /tmp/versions.txt
+          done
+
+          # Output for debugging
+          cat /tmp/versions.txt
+
+      - name: Update README with versions
+        id: update-readme
+        run: |
+          echo "Updating README with current versions..."
+
+          # Read versions
+          declare -A versions
+          while IFS='=' read -r minor version; do
+            versions[$minor]=$version
+          done < /tmp/versions.txt
+
+          # Create backup
+          cp README.md README.md.backup
+
+          # Update the table in README
+          # This updates the "Python Source" column with actual versions
+          for minor in "${!versions[@]}"; do
+            version="${versions[$minor]}"
+            if [[ "$minor" == "3.9" || "$minor" == "3.10" ]]; then
+              debian="bullseye"
+            else
+              debian="bookworm"
+            fi
+
+            # Check if this is the latest Python version (has ":latest" tag)
+            # Currently 3.14, but will be 3.15, 3.16, etc. in the future
+            if grep -q "| ${minor} | \`:${minor}\` or \`:latest\` |" README.md; then
+              # Handle version with :latest tag
+              # First try to update existing version
+              sed -i "s/| ${minor} | \`:${minor}\` or \`:latest\` | \`python:${minor}-slim-${debian}\` ([^)]*) |/| ${minor} | \`:${minor}\` or \`:latest\` | \`python:${minor}-slim-${debian}\` (${version}) |/g" README.md
+              # If no existing version, add it
+              sed -i "s/| ${minor} | \`:${minor}\` or \`:latest\` | \`python:${minor}-slim-${debian}\` |/| ${minor} | \`:${minor}\` or \`:latest\` | \`python:${minor}-slim-${debian}\` (${version}) |/g" README.md
+            else
+              # Handle regular version without :latest tag
+              # First try to update existing version
+              sed -i "s/| ${minor} | \`:${minor}\` | \`python:${minor}-slim-${debian}\` ([^)]*) |/| ${minor} | \`:${minor}\` | \`python:${minor}-slim-${debian}\` (${version}) |/g" README.md
+              # If no existing version, add it
+              sed -i "s/| ${minor} | \`:${minor}\` | \`python:${minor}-slim-${debian}\` |/| ${minor} | \`:${minor}\` | \`python:${minor}-slim-${debian}\` (${version}) |/g" README.md
+            fi
+          done
+
+          # Check if there were changes
+          if ! diff -q README.md README.md.backup > /dev/null 2>&1; then
+            echo "changes_detected=true" >> $GITHUB_OUTPUT
+            echo "Changes detected in README"
+
+            # Show diff
+            echo "Diff:"
+            diff README.md.backup README.md || true
+          else
+            echo "changes_detected=false" >> $GITHUB_OUTPUT
+            echo "No changes detected"
+          fi
+
+          rm README.md.backup
+
+      - name: Update workflow matrix if new minor version found
+        if: steps.check.outputs.new_minor_version
+        run: |
+          NEW_VERSION="${{ steps.check.outputs.new_minor_version }}"
+          echo "Adding Python ${NEW_VERSION} to workflow matrix..."
+
+          # Read the version from temp file
+          VERSION=$(grep "^${NEW_VERSION}=" /tmp/versions.txt | cut -d= -f2)
+
+          # Add to build.yml matrix
+          WORKFLOW_FILE=".github/workflows/build.yml"
+
+          # Insert new version in matrix (before the last item)
+          # Find the line with "3.14" and add the new version after it
+          sed -i "/python_version: \"3.14\"/a\\          - python_version: \"${NEW_VERSION}\"\n            debian_version: \"bookworm\"" $WORKFLOW_FILE
+
+          # Update the test matrix
+          sed -i "s/python_version: \[\"3.9\", \"3.10\", \"3.11\", \"3.12\", \"3.13\", \"3.14\"\]/python_version: [\"3.9\", \"3.10\", \"3.11\", \"3.12\", \"3.13\", \"3.14\", \"${NEW_VERSION}\"]/" $WORKFLOW_FILE
+
+          # Update latest tag logic (3.14 -> new version)
+          sed -i "s/matrix.python_version == '3.14'/matrix.python_version == '${NEW_VERSION}'/" $WORKFLOW_FILE
+
+          echo "Workflow updated to include Python ${NEW_VERSION}"
+
+          # Update README table to add new minor version
+          echo "Adding Python ${NEW_VERSION} to README table..."
+
+          # Find the current "latest" version line (currently 3.14)
+          CURRENT_LATEST=$(grep -E "\\| [0-9.]+ \\| \`:[0-9.]+\` or \`:latest\`" README.md | sed -E 's/.*\| ([0-9.]+) \| .*/\1/' | head -1)
+
+          if [ -n "$CURRENT_LATEST" ]; then
+            echo "Current latest version: ${CURRENT_LATEST}"
+
+            # Remove ":latest" tag from current latest version
+            sed -i "s/| ${CURRENT_LATEST} | \`:${CURRENT_LATEST}\` or \`:latest\` |/| ${CURRENT_LATEST} | \`:${CURRENT_LATEST}\` |/g" README.md
+
+            # Get the distroless version for the current latest (to use as template)
+            DISTROLESS=$(grep "| ${CURRENT_LATEST} |" README.md | sed -E 's/.*gcr.io\/distroless\/(python3-debian[0-9]+).*/\1/' | head -1)
+            DISTROLESS="gcr.io/distroless/${DISTROLESS}"
+
+            # Add new row after current latest with :latest tag
+            # The new version will use bookworm (Debian 12) as it's a recent Python version
+            NEW_ROW="| ${NEW_VERSION} | \`:${NEW_VERSION}\` or \`:latest\` | \`python:${NEW_VERSION}-slim-bookworm\` (${VERSION}) | \`debian:bookworm-slim\` | \`${DISTROLESS}\` |"
+
+            # Insert new row after the previous latest (GNU sed syntax)
+            sed -i "/| ${CURRENT_LATEST} |/a\\${NEW_ROW}" README.md
+
+            echo "Added new row for Python ${NEW_VERSION} with :latest tag"
+            echo "Removed :latest tag from Python ${CURRENT_LATEST}"
+          else
+            echo "Warning: Could not find current latest version in README"
+          fi
+
+      - name: Create Pull Request
+        if: steps.update-readme.outputs.changes_detected == 'true' || steps.check.outputs.new_minor_version
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: |
+            chore: Update Python versions
+
+            - Updated README with current Python versions
+            ${{ steps.check.outputs.new_minor_version && format('- Added Python {0} to build matrix', steps.check.outputs.new_minor_version) || '' }}
+          branch: update-python-versions
+          delete-branch: true
+          title: 'chore: Update Python versions'
+          body: |
+            ## Python Version Update
+
+            This PR updates the Python version information:
+
+            ### Changes
+            - ✅ Updated README with current Python versions from official images
+            ${{ steps.check.outputs.new_minor_version && format('- ✅ **NEW**: Added Python {0} to build matrix', steps.check.outputs.new_minor_version) || '' }}
+
+            ### Version Details
+            ```
+            $(cat /tmp/versions.txt)
+            ```
+
+            ### What happens next?
+            1. Review the changes
+            2. Merge this PR to trigger a new build with updated versions
+            3. Images will be built and pushed automatically
+
+            ---
+            🤖 Auto-generated by weekly version check workflow
+          labels: dependencies,automated
