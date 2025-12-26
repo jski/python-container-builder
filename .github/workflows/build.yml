@@ -56,19 +56,100 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check if image already exists
+      - name: Check if image already exists or can be re-tagged
         id: check
         run: |
-          IMAGE="ghcr.io/${{ github.repository_owner }}/python-container-builder:${{ matrix.python_version }}-${{ github.sha }}"
-          echo "Checking if ${IMAGE} already exists..."
+          CURRENT_IMAGE="ghcr.io/${{ github.repository_owner }}/python-container-builder:${{ matrix.python_version }}-${{ github.sha }}"
+          echo "=== Image Existence Check ==="
+          echo "Checking if ${CURRENT_IMAGE} already exists..."
 
-          if docker manifest inspect "${IMAGE}" >/dev/null 2>&1; then
-            echo "✅ Image already exists, skipping build"
+          # Check if image with current commit SHA exists
+          if docker manifest inspect "${CURRENT_IMAGE}" >/dev/null 2>&1; then
+            echo "✅ Image already exists for current commit, skipping build"
             echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "❌ Image does not exist, will build"
-            echo "exists=false" >> $GITHUB_OUTPUT
+            exit 0
           fi
+
+          echo "❌ Image does not exist for current commit: ${{ github.sha }}"
+
+          # If this is a push to main (likely a PR merge), try to find and re-tag the PR image
+          if [ "${{ github.event_name }}" == "push" ] && [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo ""
+            echo "=== Attempting PR Image Re-tag (Squash Merge Handling) ==="
+
+            # Method 1: Extract PR number from commit message
+            # Squash merges typically include "#123" in the commit message
+            PR_NUM=$(git log -1 --pretty=%B | grep -oP '#\K\d+' | head -1 || echo "")
+
+            if [ -n "$PR_NUM" ]; then
+              echo "Found PR #${PR_NUM} in commit message"
+              PR_IMAGE="ghcr.io/${{ github.repository_owner }}/python-container-builder:pr-${PR_NUM}-${{ matrix.python_version }}"
+
+              echo "Checking if PR image exists: ${PR_IMAGE}"
+              if docker manifest inspect "${PR_IMAGE}" >/dev/null 2>&1; then
+                echo "✅ Found PR image, re-tagging to new commit SHA..."
+
+                # Re-tag the PR image with the new commit SHA (no rebuild!)
+                docker buildx imagetools create \
+                  "${PR_IMAGE}" \
+                  --tag "${CURRENT_IMAGE}"
+
+                if [ $? -eq 0 ]; then
+                  echo "✅ Successfully re-tagged PR image to commit SHA"
+                  echo "   Source: ${PR_IMAGE}"
+                  echo "   Target: ${CURRENT_IMAGE}"
+                  echo "exists=true" >> $GITHUB_OUTPUT
+                  exit 0
+                else
+                  echo "❌ Re-tagging failed, will build from scratch"
+                fi
+              else
+                echo "⚠️  PR image not found: ${PR_IMAGE}"
+              fi
+            else
+              echo "⚠️  Could not extract PR number from commit message"
+            fi
+
+            # Method 2: Use GitHub API to find PR by merge commit SHA
+            echo ""
+            echo "Trying GitHub API to find PR by commit SHA..."
+            PR_NUM=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" \
+              | jq -r '.[0].number // empty')
+
+            if [ -n "$PR_NUM" ]; then
+              echo "Found PR #${PR_NUM} via GitHub API"
+              PR_IMAGE="ghcr.io/${{ github.repository_owner }}/python-container-builder:pr-${PR_NUM}-${{ matrix.python_version }}"
+
+              echo "Checking if PR image exists: ${PR_IMAGE}"
+              if docker manifest inspect "${PR_IMAGE}" >/dev/null 2>&1; then
+                echo "✅ Found PR image, re-tagging to new commit SHA..."
+
+                docker buildx imagetools create \
+                  "${PR_IMAGE}" \
+                  --tag "${CURRENT_IMAGE}"
+
+                if [ $? -eq 0 ]; then
+                  echo "✅ Successfully re-tagged PR image to commit SHA"
+                  echo "   Source: ${PR_IMAGE}"
+                  echo "   Target: ${CURRENT_IMAGE}"
+                  echo "exists=true" >> $GITHUB_OUTPUT
+                  exit 0
+                else
+                  echo "❌ Re-tagging failed, will build from scratch"
+                fi
+              else
+                echo "⚠️  PR image not found: ${PR_IMAGE}"
+              fi
+            else
+              echo "⚠️  Could not find PR via GitHub API"
+            fi
+          fi
+
+          echo ""
+          echo "=== Final Decision ==="
+          echo "❌ No existing image found, will build from scratch"
+          echo "exists=false" >> $GITHUB_OUTPUT
 
       - name: Extract metadata
         if: steps.check.outputs.exists == 'false'
