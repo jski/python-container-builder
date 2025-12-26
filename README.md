@@ -60,11 +60,11 @@ This approach gives you the reliability of official Python builds while maintain
 
 ### Security
 
-This project includes automated security measures:
-- 🔒 **Nightly Vulnerability Scanning**: All images scanned with [Trivy](https://github.com/aquasecurity/trivy) for CRITICAL and HIGH severity vulnerabilities
-- 🔄 **Automated Dependency Updates**: [Dependabot](https://github.com/dependabot) monitors base images and GitHub Actions for security updates
-- 📊 **Transparent Results**: Scan results available in the [Security tab](https://github.com/jski/python-container-builder/security/code-scanning)
+This project prioritizes security through:
 - 🏗️ **Official Base Images**: Built from official Python and Debian Docker images, ensuring timely security patches
+- 🔄 **Automated Dependency Updates**: [Dependabot](https://github.com/dependabot) monitors base images and GitHub Actions for security updates
+- 🔒 **Distroless Runtime**: The recommended pattern copies only the Python virtualenv to a distroless runtime, minimizing attack surface
+- 📦 **Isolated Dependencies**: Virtual environment isolation ensures clean dependency management
 
 ## Goals
 This project seeks to:
