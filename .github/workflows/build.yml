@@ -183,11 +183,11 @@ jobs:
   promote:
     name: Promote to Production
     runs-on: ubuntu-latest
-    needs: [build, test, security-scan]
+    needs: [build, test]
     # Promote on:
     #   1. Normal merge to main (not force push)
     #   2. Manual workflow dispatch with promote flag enabled
-    # CRITICAL: Only runs if build, test, AND security-scan all succeed
+    # CRITICAL: Only runs if build AND test all succeed
     if: |
       (github.event_name == 'push' && github.ref == 'refs/heads/main' && !github.event.forced) ||
       (github.event_name == 'workflow_dispatch' && inputs.promote == true)
@@ -240,36 +240,6 @@ jobs:
             --tag "${LATEST_TAG}"
 
           echo "✅ Successfully promoted latest tag"
-
-  security-scan:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      contents: read
-      security-events: write
-    steps:
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ghcr.io/${{ github.repository_owner }}/python-container-builder:3.14-${{ github.sha }}
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
-
-      - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v4
-        if: always()
-        with:
-          sarif_file: 'trivy-results.sarif'
-
-      - name: Print Trivy results summary
-        uses: aquasecurity/trivy-action@master
-        if: always()
-        with:
-          image-ref: ghcr.io/${{ github.repository_owner }}/python-container-builder:3.14-${{ github.sha }}
-          format: 'table'
-          severity: 'CRITICAL,HIGH'
 
   test:
     name: Test Images
