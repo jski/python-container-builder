@@ -22,6 +22,7 @@ jobs:
       contents: read
       packages: write
     strategy:
+      fail-fast: false
       matrix:
         include:
           - python_version: "3.9"
@@ -113,6 +114,7 @@ jobs:
       contents: read
       packages: write
     strategy:
+      fail-fast: false
       matrix:
         python_version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
@@ -195,6 +197,7 @@ jobs:
     permissions:
       contents: read
     strategy:
+      fail-fast: false
       matrix:
         python_version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
