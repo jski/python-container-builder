@@ -1,5 +1,5 @@
 # Python Container Builder
-[![Build & Deploy Nightly](https://github.com/jski/python-container-builder/actions/workflows/nightly.yml/badge.svg?branch=main)](https://github.com/jski/python-container-builder/actions/workflows/nightly.yml)
+[![Build & Deploy](https://github.com/jski/python-container-builder/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/jski/python-container-builder/actions/workflows/build.yml)
 [![Python Versions](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue)](https://github.com/jski/python-container-builder)
 [![Platform Support](https://img.shields.io/badge/platform-linux%2Famd64%20%7C%20linux%2Farm64-blue)](https://github.com/jski/python-container-builder)
 
