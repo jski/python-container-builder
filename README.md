@@ -95,13 +95,13 @@ Use the appropriate image tag and distroless runtime for your Python version:
 
 | Build Image | Distroless Runtime | Use Case |
 |-------------|-------------------|----------|
-| `:3.14` or `:latest` | `python3-debian12` | Latest features |
+| `:3.14` | `python3-debian12` | Latest features |
 | `:3.12` | `python3-debian12` | Recommended for most projects |
 | `:3.11` | `python3-debian12` | Long-term stable |
 | `:3.10` | `python3-debian11` | Older projects |
 | `:3.9` | `python3-debian11` | Legacy compatibility |
 
-> **Note**: When using Python 3.9 or 3.10, use `gcr.io/distroless/python3-debian11` as your runtime. For Python 3.11+, use `gcr.io/distroless/python3-debian12`.
+> **Note**: When using Python 3.9 or 3.10, use `gcr.io/distroless/python3-debian11` as your runtime. For Python 3.11+, use `gcr.io/distroless/python3-debian12`. `latest` is an alias for the tag `:3.14`.
 
 ### How It Works
 1. Choose your Python version and declare the corresponding base image as the top FROM line in your Dockerfile (e.g., `:3.12`, `:3.14`, or `:latest`).
