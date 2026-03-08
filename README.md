@@ -41,8 +41,8 @@ This project provides pre-built images for multiple Python versions, using a hyb
 |----------------|-----------|---------------|-------------|-------------------|
 | 3.9 | `:3.9` | `python:3.9-slim-bullseye` (3.9.23) | `debian:bullseye-slim` | `gcr.io/distroless/python3-debian11` |
 | 3.10 | `:3.10` | `python:3.10-slim-bullseye` (3.10.18) | `debian:bullseye-slim` | `gcr.io/distroless/python3-debian11` |
-| 3.11 | `:3.11` | `python:3.11-slim-bookworm` (3.11.14) | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
-| 3.12 | `:3.12` | `python:3.12-slim-bookworm` (3.12.12) | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
+| 3.11 | `:3.11` | `python:3.11-slim-bookworm` (3.11.15) | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
+| 3.12 | `:3.12` | `python:3.12-slim-bookworm` (3.12.13) | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
 | 3.13 | `:3.13` | `python:3.13-slim-bookworm` (3.13.12) | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
 | 3.14 | `:3.14` or `:latest` | `python:3.14-slim-bookworm` (3.14.3) | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
 
