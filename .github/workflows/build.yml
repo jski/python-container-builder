@@ -154,7 +154,7 @@ jobs:
       - name: Extract metadata
         if: steps.check.outputs.exists == 'false'
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository_owner }}/python-container-builder
           tags: |
