@@ -17,7 +17,11 @@ jobs:
       - uses: actions/checkout@v6
       - name: Build candidate and final application images
         run: |
-          docker build --build-arg PYTHON_VERSION=3.11 --build-arg DEBIAN_VERSION=bookworm -t builder:candidate .
+          entry=$(jq -ce '.[] | select(.python_version == "3.11")' versions.json)
+          python_image=$(jq -r '"python:\(.python_version)-slim-\(.debian_version)@\(.python_digest)"' <<< "$entry")
+          debian_image=$(jq -r '"debian:\(.debian_version)-slim@\(.debian_digest)"' <<< "$entry")
+          docker build --build-arg PYTHON_VERSION=3.11 --build-arg PYTHON_IMAGE="$python_image" \
+            --build-arg DEBIAN_IMAGE="$debian_image" -t builder:candidate .
           for example in fastapi poetry-cli data-science; do
             docker build --build-arg BUILDER_IMAGE=builder:candidate -t "example:$example" "examples/$example"
           done
