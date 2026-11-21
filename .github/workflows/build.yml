@@ -4,8 +4,8 @@ on:
     branches:
       - main
   pull_request:
-    branches:
-      - main
+  repository_dispatch:
+    types: [dependabot-merged]
   workflow_dispatch:
     inputs:
       promote:
@@ -14,12 +14,42 @@ on:
         type: boolean
         default: false
 
-concurrency:
-  group: image-release-${{ github.ref == 'refs/heads/main' && 'main' || github.run_id }}
-  cancel-in-progress: false
-
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      image: ${{ steps.paths.outputs.image }}
+      examples: ${{ steps.paths.outputs.examples }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: paths
+        env:
+          # The PR checkout is GitHub's test merge commit. Compare it to its base.
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before || github.event.client_payload.before }}
+        run: |
+          image=true
+          examples=true
+          if [[ "$GITHUB_EVENT_NAME" != workflow_dispatch && "$BASE" =~ ^[0-9a-f]{40}$ ]] &&
+             git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            builder_changes=$(git diff --name-only --no-renames "$BASE" HEAD -- Dockerfile .dockerignore versions.json)
+            image_changes=$(git diff --name-only --no-renames "$BASE" HEAD -- \
+              .github/workflows/build.yml .github/workflows/image.yml scripts/versions.mjs scripts/versions.test.mjs)
+            example_changes=$(git diff --name-only --no-renames "$BASE" HEAD -- \
+              .github/workflows/build.yml .github/workflows/examples.yml examples/ ':(glob,icase,exclude)examples/**/*.md')
+            [[ -n "$builder_changes$image_changes" ]] || image=false
+            [[ -n "$builder_changes$example_changes" ]] || examples=false
+          fi
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+          echo "examples=$examples" >> "$GITHUB_OUTPUT"
+
   versions:
+    needs: changes
+    if: needs.changes.outputs.image == 'true' && (github.event_name != 'pull_request' || github.base_ref == 'main')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -36,6 +66,9 @@ jobs:
   image:
     name: Python ${{ matrix.python_version }}
     needs: versions
+    concurrency:
+      group: image-release-${{ github.ref == 'refs/heads/main' && 'main' || github.run_id }}-${{ matrix.python_version }}
+      cancel-in-progress: false
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.versions.outputs.matrix) }}
@@ -50,4 +83,12 @@ jobs:
       python_digest: ${{ matrix.python_digest }}
       debian_digest: ${{ matrix.debian_digest }}
       latest: ${{ matrix.latest }}
-      promote: ${{ github.ref == 'refs/heads/main' && ((github.event_name == 'push' && !github.event.forced) || (github.event_name == 'workflow_dispatch' && inputs.promote)) }}
+      promote: ${{ github.ref == 'refs/heads/main' && ((github.event_name == 'push' && !github.event.forced) || github.event_name == 'repository_dispatch' || (github.event_name == 'workflow_dispatch' && inputs.promote)) }}
+
+  examples:
+    name: Consumer examples
+    needs: changes
+    if: needs.changes.outputs.examples == 'true'
+    uses: ./.github/workflows/examples.yml
+    permissions:
+      contents: read

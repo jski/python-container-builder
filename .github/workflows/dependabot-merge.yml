@@ -1,0 +1,77 @@
+name: Merge Dependabot patches
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened, reopened, synchronize, ready_for_review]
+
+permissions: {}
+
+jobs:
+  merge:
+    if: >-
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    concurrency:
+      group: dependabot-merge-${{ github.event.number }}
+      cancel-in-progress: false
+    permissions:
+      actions: read
+      contents: write
+      pull-requests: write
+    steps:
+      # This workflow runs with write permissions and never checks out PR code.
+      - uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+        id: metadata
+      - name: Wait for CI and merge the checked revision
+        if: steps.metadata.outputs.update-type == 'version-update:semver-patch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.number }}
+          UPDATES: ${{ steps.metadata.outputs.updated-dependencies-json }}
+        run: |
+          if ! jq -e 'length > 0 and all(.[]; .updateType == "version-update:semver-patch")' <<< "$UPDATES"; then
+            echo 'Every dependency update must be classified as a patch.'
+            exit 0
+          fi
+
+          pr="repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER"
+          merged=
+          while true; do
+            current=$(gh api "$pr")
+            if ! jq -e --arg sha "$HEAD_SHA" '.head.sha == $sha and .base.ref == "main"' <<< "$current"; then
+              exit 0
+            fi
+            # A retry can resume dispatching if the merge already succeeded.
+            merged=$(jq -r 'select(.merged and .merged_by.login == "github-actions[bot]") | .merge_commit_sha' <<< "$current")
+            if [[ -n "$merged" ]]; then
+              break
+            fi
+            if ! jq -e '.state == "open" and (.draft | not)' <<< "$current"; then
+              exit 0
+            fi
+
+            run=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow build.yml \
+              --event pull_request --commit "$HEAD_SHA" --limit 1 --json status,conclusion \
+              --jq '.[0] | select(.status == "completed") | .conclusion')
+            case "$run" in
+              success) break ;;
+              '') sleep 15 ;;
+              *) echo "CI finished with $run"; exit 1 ;;
+            esac
+          done
+
+          if [[ -z "$merged" ]]; then
+            merged=$(gh api --method PUT "$pr/merge" -f sha="$HEAD_SHA" -f merge_method=merge \
+              --jq 'select(.merged) | .sha')
+            test -n "$merged"
+          fi
+
+          # GITHUB_TOKEN merges do not fire push workflows. Reuse the main CI path
+          # with the real merge base so example-only updates skip image publishing.
+          before=$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$merged" --jq '.parents[0].sha')
+          gh api --method POST "repos/$GITHUB_REPOSITORY/dispatches" \
+            -f event_type=dependabot-merged -f 'client_payload[before]'="$before"
