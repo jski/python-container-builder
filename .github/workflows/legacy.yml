@@ -1,0 +1,80 @@
+name: Legacy Bookworm images
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    - cron: '43 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        minor: ['3.9', '3.10']
+    concurrency:
+      group: legacy-${{ github.ref }}-${{ matrix.minor }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: write
+    services:
+      registry:
+        image: registry:2
+        ports: ['5000:5000']
+    env:
+      MINOR: ${{ matrix.minor }}
+      IMAGE: ghcr.io/${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v6
+      - run: node --test scripts/legacy-inputs.test.mjs
+      - name: Resolve latest stable CPython patch and exact Bookworm inputs
+        run: node scripts/legacy-inputs.mjs "$MINOR" >> "$GITHUB_ENV"
+      - uses: docker/setup-qemu-action@v4
+      - uses: docker/setup-buildx-action@v4
+        with:
+          driver-opts: network=host
+          buildkitd-config-inline: |
+            [registry."localhost:5000"]
+              http = true
+      - name: Build both architectures into a temporary registry
+        run: |
+          docker buildx build --pull --platform linux/amd64,linux/arm64 \
+            --build-arg PYTHON_VERSION="$MINOR" --build-arg PYTHON_IMAGE="$PYTHON_IMAGE" \
+            --build-arg DEBIAN_IMAGE="$DEBIAN_IMAGE" --sbom=true --provenance=true \
+            --metadata-file build.json --push -t localhost:5000/builder:tested .
+          digest=$(jq -er '."containerimage.digest"' build.json)
+          echo "SOURCE=localhost:5000/builder@$digest" >> "$GITHUB_ENV"
+      - name: Qualify both builder and distroless runtime
+        run: |
+          for arch in amd64 arm64; do
+            docker run --rm --platform "linux/$arch" "$SOURCE" sh -ec 'for tool in uv pip poetry pipenv pdm; do "$tool" --version; done'
+            docker buildx build --platform "linux/$arch" --build-arg SOURCE="$SOURCE" --load -t "runtime:$arch" - <<'DOCKERFILE'
+          ARG SOURCE
+          FROM ${SOURCE} AS builder
+          RUN uv pip install 'click==8.1.8'
+          FROM gcr.io/distroless/python3-debian12
+          COPY --from=builder /usr/local /usr/local
+          COPY --from=builder /.venv /.venv
+          ENTRYPOINT ["/.venv/bin/python"]
+          DOCKERFILE
+            docker run --rm --platform "linux/$arch" -e PATCH "runtime:$arch" -c 'import click, os, platform, sqlite3, ssl, sys; assert platform.python_version() == os.environ["PATCH"] and sys.prefix == "/.venv"'
+          done
+      - uses: docker/login-action@v4
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - name: Publish and verify the tested multi-platform index
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          if ! command -v skopeo >/dev/null; then
+            sudo apt-get update && sudo apt-get install -y skopeo
+          fi
+          skopeo copy --all --preserve-digests --src-tls-verify=false "docker://$SOURCE" "docker://$IMAGE:$MINOR"
+          published=$(skopeo inspect --raw "docker://$IMAGE:$MINOR" | sha256sum | cut -d' ' -f1)
+          test "sha256:$published" = "${SOURCE##*@}"

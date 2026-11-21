@@ -39,14 +39,18 @@ This project provides pre-built images for multiple Python versions, using a hyb
 
 | Python Version | Image Tag | Python Source | Debian Base | Distroless Runtime |
 |----------------|-----------|---------------|-------------|-------------------|
-| 3.9 | `:3.9` | `python:3.9-slim-bullseye` | `debian:bullseye-slim` | `gcr.io/distroless/python3-debian11` |
-| 3.10 | `:3.10` | `python:3.10-slim-bullseye` | `debian:bullseye-slim` | `gcr.io/distroless/python3-debian11` |
+| 3.9 | `:3.9` | `python:3.9-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
+| 3.10 | `:3.10` | `python:3.10-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
 | 3.11 | `:3.11` | `python:3.11-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
 | 3.12 | `:3.12` | `python:3.12-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
 | 3.13 | `:3.13` | `python:3.13-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
 | 3.14 | `:3.14` or `:latest` | `python:3.14-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
 
-Python 3.9 and 3.10 are frozen legacy tags. Their existing images remain available, and automated rebuilds cover Python 3.11 through 3.14.
+All supported tags use Debian 12 (Bookworm). When upgrading an existing 3.9 or 3.10 application, change its distroless runtime to Debian 12 and rebuild both stages together.
+
+For 3.9 and 3.10, a daily job checks stable CPython release tags, resolves the matching Bookworm image by exact patch, and publishes each minor independently after both architectures pass. A missing upstream image fails that minor's check and is retried on the next run.
+
+Plan the migration to Debian 13 (Trixie) before June 30, 2028.
 
 All images support both `linux/amd64` and `linux/arm64` architectures.
 
@@ -100,10 +104,10 @@ Use the appropriate image tag and distroless runtime for your Python version:
 | `:3.14` | `python3-debian12` | Latest features |
 | `:3.12` | `python3-debian12` | Recommended for most projects |
 | `:3.11` | `python3-debian12` | Long-term stable |
-| `:3.10` | `python3-debian11` | Older projects |
-| `:3.9` | `python3-debian11` | Legacy compatibility |
+| `:3.10` | `python3-debian12` | Older projects |
+| `:3.9` | `python3-debian12` | Legacy compatibility |
 
-> **Note**: When using Python 3.9 or 3.10, use `gcr.io/distroless/python3-debian11` as your runtime. For Python 3.11+, use `gcr.io/distroless/python3-debian12`. `latest` is an alias for the tag `:3.14`.
+Use the Debian 12 distroless runtime for every supported minor. The `:latest` alias follows `:3.14`.
 
 ### How It Works
 1. Choose your Python version and declare the corresponding base image as the top FROM line in your Dockerfile (e.g., `:3.12`, `:3.14`, or `:latest`).

@@ -110,7 +110,7 @@ Choose your Python version by changing the tag:
 - `:3.12` - Python 3.12 (recommended for most users)
 - `:3.14` or `:latest` - Python 3.14 (newest features)
 - `:3.11` - Python 3.11 (long-term stable)
-- `:3.9`, `:3.10` - Older versions (use `debian11` distroless)
+- `:3.9`, `:3.10` - Older versions (use `debian12` distroless)
 
 ### Adding System Dependencies
 If your packages need compilation:

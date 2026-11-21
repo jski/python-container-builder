@@ -133,8 +133,8 @@ Ensure your build and runtime images use compatible Debian versions:
 
 | Build Image Tag | Debian Version | Compatible Distroless Runtime |
 |----------------|----------------|------------------------------|
-| `:3.9` | Debian 11 (bullseye) | `gcr.io/distroless/python3-debian11` |
-| `:3.10` | Debian 11 (bullseye) | `gcr.io/distroless/python3-debian11` |
+| `:3.9` | Debian 12 (bookworm) | `gcr.io/distroless/python3-debian12` |
+| `:3.10` | Debian 12 (bookworm) | `gcr.io/distroless/python3-debian12` |
 | `:3.11` | Debian 12 (bookworm) | `gcr.io/distroless/python3-debian12` |
 | `:3.12` | Debian 12 (bookworm) | `gcr.io/distroless/python3-debian12` |
 | `:3.13` | Debian 12 (bookworm) | `gcr.io/distroless/python3-debian12` |
@@ -144,14 +144,14 @@ Ensure your build and runtime images use compatible Debian versions:
 ```dockerfile
 FROM ghcr.io/jski/python-container-builder:3.10 as build-venv
 # ...
-FROM gcr.io/distroless/python3-debian11  # ✓ Matches debian11
+FROM gcr.io/distroless/python3-debian12
 ```
 
 **Incorrect example:**
 ```dockerfile
 FROM ghcr.io/jski/python-container-builder:3.10 as build-venv
 # ...
-FROM gcr.io/distroless/python3-debian12  # ✗ Mismatch! Should be debian11
+FROM gcr.io/distroless/python3-debian11
 ```
 
 ---
