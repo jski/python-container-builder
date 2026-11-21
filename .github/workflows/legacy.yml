@@ -50,9 +50,13 @@ jobs:
           echo "SOURCE=localhost:5000/builder@$digest" >> "$GITHUB_ENV"
       - name: Qualify both builder and distroless runtime
         run: |
+          curl -fsS -H 'Accept: application/vnd.oci.image.index.v1+json' \
+            "http://localhost:5000/v2/builder/manifests/${SOURCE##*@}" > index.json
           for arch in amd64 arm64; do
-            docker run --rm --platform "linux/$arch" "$SOURCE" sh -ec 'for tool in uv pip poetry pipenv pdm; do "$tool" --version; done'
-            docker buildx build --platform "linux/$arch" --build-arg SOURCE="$SOURCE" --load -t "runtime:$arch" - <<'DOCKERFILE'
+            child=$(jq -er --arg arch "$arch" '.manifests[] | select(.platform.os == "linux" and .platform.architecture == $arch) | .digest' index.json)
+            platform_image="localhost:5000/builder@$child"
+            docker run --rm --platform "linux/$arch" "$platform_image" sh -ec 'for tool in uv pip poetry pipenv pdm; do "$tool" --version; done'
+            docker buildx build --platform "linux/$arch" --build-arg SOURCE="$platform_image" --load -t "runtime:$arch" - <<'DOCKERFILE'
           ARG SOURCE
           FROM ${SOURCE} AS builder
           RUN uv pip install 'click==8.1.8'
