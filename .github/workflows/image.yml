@@ -75,14 +75,15 @@ jobs:
             child=$(jq -er --arg arch "$arch" '.manifests[] | select(.platform.os == "linux" and .platform.architecture == $arch) | .digest' index.json)
             platform_image="localhost:5000/builder@$child"
             docker run --rm --platform "linux/$arch" "$platform_image" sh -ec 'for tool in uv pip poetry pipenv pdm; do "$tool" --version; done'
-            docker run --rm --platform "linux/$arch" "$platform_image" /.venv/bin/python -c '
-            from importlib.metadata import distributions
-            import sys
-            assert sys.prefix == "/.venv"
-            installed = {d.metadata["Name"].lower() for d in distributions()}
-            assert "pip" in installed
-            assert installed.isdisjoint({"poetry", "pipenv", "pdm"}), installed
-            '
+            docker run --rm -i --platform "linux/$arch" "$platform_image" /.venv/bin/python - <<'PYTHON'
+          from importlib.metadata import distributions
+          import sys
+
+          assert sys.prefix == "/.venv"
+          installed = {d.metadata["Name"].lower() for d in distributions()}
+          assert "pip" in installed
+          assert installed.isdisjoint({"poetry", "pipenv", "pdm"}), installed
+          PYTHON
             docker run --rm --platform "linux/$arch" "$platform_image" sh -ec '
               uv pip install requests
               /.venv/bin/pip install click
