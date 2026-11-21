@@ -19,3 +19,14 @@ updates:
     labels:
       - "dependencies"
       - "github-actions"
+
+  - package-ecosystem: "pip"
+    directories:
+      - "/examples/data-science"
+      - "/examples/fastapi"
+      - "/examples/poetry-cli"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
