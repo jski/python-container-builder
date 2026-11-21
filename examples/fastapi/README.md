@@ -67,7 +67,7 @@ ENTRYPOINT ["/.venv/bin/python3", "-u", "main.py"]
 
 1. **Fast builds** - `uv` installs dependencies much faster than pip
 2. **Small images** - Distroless runtime contains only what's needed
-3. **Security** - No package manager or shell in final image
+3. **Security** - The distroless base omits the shell and Debian package manager
 4. **Reliable** - Virtual environment ensures dependency isolation
 
 ## Customization
@@ -76,7 +76,7 @@ ENTRYPOINT ["/.venv/bin/python3", "-u", "main.py"]
 Change the build image tag:
 ```dockerfile
 FROM ghcr.io/jski/python-container-builder:3.11 as build-venv
-# Also change the runtime to match:
+# Use this Bookworm-compatible runtime for Python 3.9 through 3.14:
 FROM gcr.io/distroless/python3-debian12
 ```
 

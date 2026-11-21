@@ -125,7 +125,7 @@ RuntimeError: Python version mismatch
 ModuleNotFoundError: No module named '_ctypes'
 ```
 
-**Cause:** Build image Python version doesn't match distroless runtime Python version.
+**Cause:** The copied Python interpreter or one of its native dependencies requires libraries from a different Debian release than the runtime provides.
 
 **Solution:**
 
@@ -402,7 +402,7 @@ ENTRYPOINT ["/.venv/bin/python3", "-u", "main.py"]
 If you encounter an issue not covered here:
 
 1. **Check the examples** in the main [README.md](README.md)
-2. **Review the workflow** in `.github/workflows/build-and-push.yml` to see how images are built
+2. Review the [3.11–3.14 build workflow](.github/workflows/build.yml) or [3.9–3.10 build workflow](.github/workflows/legacy.yml) for the failing Python minor.
 3. **Open an issue** at https://github.com/jski/python-container-builder/issues with:
    - Your Dockerfile
    - Full error message
