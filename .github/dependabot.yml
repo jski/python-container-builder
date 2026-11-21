@@ -27,6 +27,9 @@ updates:
       - "/examples/poetry-cli"
     schedule:
       interval: "weekly"
+    allow:
+      - dependency-type: "direct"
+        update-types: ["version-update:semver-patch"]
     open-pull-requests-limit: 5
     labels:
       - "dependencies"
