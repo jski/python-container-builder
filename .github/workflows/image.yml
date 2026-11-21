@@ -42,7 +42,7 @@ jobs:
       PYTHON_IMAGE: python:${{ inputs.patch }}-slim-${{ inputs.debian_version }}@${{ inputs.python_digest }}
       DEBIAN_IMAGE: debian:${{ inputs.debian_version }}-slim@${{ inputs.debian_digest }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - uses: docker/setup-qemu-action@v4
@@ -108,7 +108,7 @@ jobs:
             --argjson platforms '["linux/amd64","linux/arm64"]' \
             '{minor: $minor, patch: $patch, digest: $digest, commit: $commit, tree: $tree, platforms: $platforms}' \
             > tested-image.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: tested-python-${{ inputs.python_version }}-${{ github.run_attempt }}
           path: tested-image.json
