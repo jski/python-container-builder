@@ -39,21 +39,27 @@ This project provides pre-built images for multiple Python versions, using a hyb
 
 | Python Version | Image Tag | Python Source | Debian Base | Distroless Runtime |
 |----------------|-----------|---------------|-------------|-------------------|
-| 3.9 | `:3.9` | `python:3.9-slim-bullseye` | `debian:bullseye-slim` | `gcr.io/distroless/python3-debian11` |
-| 3.10 | `:3.10` | `python:3.10-slim-bullseye` | `debian:bullseye-slim` | `gcr.io/distroless/python3-debian11` |
-| 3.11 | `:3.11` | `python:3.11-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
-| 3.12 | `:3.12` | `python:3.12-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
-| 3.13 | `:3.13` | `python:3.13-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
-| 3.14 | `:3.14` or `:latest` | `python:3.14-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
+| 3.9 | `:3.9` | `python:3.9.<patch>-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
+| 3.10 | `:3.10` | `python:3.10.<patch>-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
+| 3.11 | `:3.11` | `python:3.11.<patch>-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
+| 3.12 | `:3.12` | `python:3.12.<patch>-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
+| 3.13 | `:3.13` | `python:3.13.<patch>-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
+| 3.14 | `:3.14` or `:latest` | `python:3.14.<patch>-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
 
-Python 3.9 and 3.10 are frozen legacy tags. Their existing images remain available, and automated rebuilds cover Python 3.11 through 3.14.
+All supported tags use Debian 12 (Bookworm). When upgrading an existing 3.9 or 3.10 application, change its distroless runtime to Debian 12 and rebuild both stages together.
+
+A daily check compares each minor with the latest stable CPython release and proposes the matching Bookworm image digests in `versions.json`. If an upstream image is missing, the check reports that minor, preserves its previous inputs, and can still propose updates for other minors.
+
+The release workflow builds each minor independently. It tests the exact manifest patch inside the Debian 12 distroless runtime on amd64 and arm64. After merge, each passing minor can publish its own tag. The manifest selects which minor also publishes `:latest`.
+
+Plan the migration to Debian 13 (Trixie) before June 30, 2028.
 
 All images support both `linux/amd64` and `linux/arm64` architectures.
 
 ### Build Approach
 
 These images use a **hybrid multi-stage build**:
-1. Extract Python from official `python:X.Y-slim-debian` images (ensures reliability and latest patches)
+1. Extract Python from the pinned official Bookworm image for the selected version.
 2. Copy Python into a clean `debian:X-slim` base (full control over dependencies)
 3. Add modern package managers: `uv`, `poetry`, `pipenv`, `pdm`, and `pip`
 4. Pre-create a virtual environment at `/.venv`
@@ -63,9 +69,9 @@ This approach gives you the reliability of official Python builds while maintain
 ### Security
 
 This project prioritizes security through:
-- 🏗️ **Official Base Images**: Built from official Python and Debian Docker images, ensuring timely security patches
+- 🏗️ **Official Base Images**: The build uses official Python and Debian image digests.
 - 🔄 **Automated Dependency Updates**: [Dependabot](https://github.com/dependabot) monitors base images and GitHub Actions for security updates
-- 🔒 **Distroless Runtime**: The recommended pattern copies only the Python virtualenv to a distroless runtime, minimizing attack surface
+- 🔒 **Distroless Runtime**: The examples copy the Python installation and virtual environment into the Debian 12 distroless runtime.
 - 📦 **Isolated Dependencies**: Virtual environment isolation ensures clean dependency management
 
 ## Goals
@@ -74,7 +80,7 @@ This project seeks to:
 - Reduce usage of Github Actions free tier minutes for said projects by doing the most time-intensive part up front here instead.
 - Offer a base image that supports packaging into a final distroless runtime.
 - Provide a clean, customizable Debian base with reliable Python builds.
-- Check the supported Python and Debian base image digests daily and propose updates in a pull request.
+- Check upstream images daily and test updates before publishing.
 - Support both `linux/arm64` and `linux/amd64` architectures.
 - Be publicly available for use without needing to login to a registry.
 - Include modern Python package managers: `uv`, `poetry`, `pipenv`, `pdm`, and `pip`.
@@ -98,17 +104,18 @@ Use the appropriate image tag and distroless runtime for your Python version:
 | Build Image | Distroless Runtime | Use Case |
 |-------------|-------------------|----------|
 | `:3.14` | `python3-debian12` | Latest features |
+| `:3.13` | `python3-debian12` | Python 3.13 projects |
 | `:3.12` | `python3-debian12` | Recommended for most projects |
 | `:3.11` | `python3-debian12` | Long-term stable |
-| `:3.10` | `python3-debian11` | Older projects |
-| `:3.9` | `python3-debian11` | Legacy compatibility |
+| `:3.10` | `python3-debian12` | Older projects |
+| `:3.9` | `python3-debian12` | Legacy compatibility |
 
-> **Note**: When using Python 3.9 or 3.10, use `gcr.io/distroless/python3-debian11` as your runtime. For Python 3.11+, use `gcr.io/distroless/python3-debian12`. `latest` is an alias for the tag `:3.14`.
+Use the Debian 12 distroless runtime for every supported minor. The `:latest` alias follows `:3.14`.
 
 ### How It Works
 1. Choose your Python version and declare the corresponding base image as the top FROM line in your Dockerfile (e.g., `:3.12`, `:3.14`, or `:latest`).
 2. Copy your requirements or configuration files from your application repo, and run `uv pip install` (or `pip install`) from a virtualenv.
-3. Declare the final distroless container image you'll use for runtime, matching the Debian version to your Python version (see table above).
+3. Declare the final distroless container image you'll use for runtime, using the Debian 12 runtime for every supported Python version.
 4. Copy the virtualenv you built in the first phase of the build.
 5. Move your application files to the proper location on the filesystem, and setup your workdir and entrypoint. All done!
 

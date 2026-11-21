@@ -125,7 +125,7 @@ RuntimeError: Python version mismatch
 ModuleNotFoundError: No module named '_ctypes'
 ```
 
-**Cause:** Build image Python version doesn't match distroless runtime Python version.
+**Cause:** The copied Python interpreter or one of its native dependencies requires libraries from a different Debian release than the runtime provides.
 
 **Solution:**
 
@@ -133,8 +133,8 @@ Ensure your build and runtime images use compatible Debian versions:
 
 | Build Image Tag | Debian Version | Compatible Distroless Runtime |
 |----------------|----------------|------------------------------|
-| `:3.9` | Debian 11 (bullseye) | `gcr.io/distroless/python3-debian11` |
-| `:3.10` | Debian 11 (bullseye) | `gcr.io/distroless/python3-debian11` |
+| `:3.9` | Debian 12 (bookworm) | `gcr.io/distroless/python3-debian12` |
+| `:3.10` | Debian 12 (bookworm) | `gcr.io/distroless/python3-debian12` |
 | `:3.11` | Debian 12 (bookworm) | `gcr.io/distroless/python3-debian12` |
 | `:3.12` | Debian 12 (bookworm) | `gcr.io/distroless/python3-debian12` |
 | `:3.13` | Debian 12 (bookworm) | `gcr.io/distroless/python3-debian12` |
@@ -144,14 +144,14 @@ Ensure your build and runtime images use compatible Debian versions:
 ```dockerfile
 FROM ghcr.io/jski/python-container-builder:3.10 as build-venv
 # ...
-FROM gcr.io/distroless/python3-debian11  # ✓ Matches debian11
+FROM gcr.io/distroless/python3-debian12
 ```
 
 **Incorrect example:**
 ```dockerfile
 FROM ghcr.io/jski/python-container-builder:3.10 as build-venv
 # ...
-FROM gcr.io/distroless/python3-debian12  # ✗ Mismatch! Should be debian11
+FROM gcr.io/distroless/python3-debian11
 ```
 
 ---
@@ -402,7 +402,7 @@ ENTRYPOINT ["/.venv/bin/python3", "-u", "main.py"]
 If you encounter an issue not covered here:
 
 1. **Check the examples** in the main [README.md](README.md)
-2. **Review the workflow** in `.github/workflows/build-and-push.yml` to see how images are built
+2. Open the [release workflow](.github/workflows/build.yml) and inspect the build, test, or promotion job for the affected Python minor.
 3. **Open an issue** at https://github.com/jski/python-container-builder/issues with:
    - Your Dockerfile
    - Full error message
