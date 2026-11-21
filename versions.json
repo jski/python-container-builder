@@ -1,19 +1,5 @@
 [
   {
-    "python_version": "3.9",
-    "debian_version": "bullseye",
-    "python_digest": "sha256:b9e06687fbfc57f6fe563e94e4c8751e39513dde89afc120dc6f56afe5ffc761",
-    "debian_digest": "sha256:e5b6442dd2e9684cf5e87d8338b5968f3b348636fc0be6d7850a381e3731a2bd",
-    "latest": false
-  },
-  {
-    "python_version": "3.10",
-    "debian_version": "bullseye",
-    "python_digest": "sha256:f1fb49e4d5501ac93d0ca519fb7ee6250842245aba8612926a46a0832a1ed089",
-    "debian_digest": "sha256:e5b6442dd2e9684cf5e87d8338b5968f3b348636fc0be6d7850a381e3731a2bd",
-    "latest": false
-  },
-  {
     "python_version": "3.11",
     "debian_version": "bookworm",
     "python_digest": "sha256:a83ba18aef0f865b1a4a611c2cf460fe446f2795673bbb9fe43be570439e3b39",

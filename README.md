@@ -46,6 +46,8 @@ This project provides pre-built images for multiple Python versions, using a hyb
 | 3.13 | `:3.13` | `python:3.13-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
 | 3.14 | `:3.14` or `:latest` | `python:3.14-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
 
+Python 3.9 and 3.10 are frozen legacy tags. Their existing images remain available, and automated rebuilds cover Python 3.11 through 3.14.
+
 All images support both `linux/amd64` and `linux/arm64` architectures.
 
 ### Build Approach
