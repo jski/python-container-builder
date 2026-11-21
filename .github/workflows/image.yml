@@ -266,6 +266,19 @@ jobs:
         run: |
           docker run --rm ghcr.io/${{ github.repository_owner }}/python-container-builder:${{ inputs.python_version }}-${{ github.sha }} sh -c 'test -d /.venv && echo "venv exists"'
 
+      - name: Test application environment isolation
+        env:
+          IMAGE: ghcr.io/${{ github.repository_owner }}/python-container-builder:${{ inputs.python_version }}-${{ github.sha }}
+        run: |
+          docker run --rm "$IMAGE" /.venv/bin/python -c '
+          from importlib.metadata import distributions
+          import sys
+          assert sys.prefix == "/.venv"
+          installed = {d.metadata["Name"].lower() for d in distributions()}
+          assert "pip" in installed
+          assert installed.isdisjoint({"poetry", "pipenv", "pdm"}), installed
+          '
+
       - name: Test package installation with uv
         run: |
           docker run --rm ghcr.io/${{ github.repository_owner }}/python-container-builder:${{ inputs.python_version }}-${{ github.sha }} sh -c 'uv pip install requests && /.venv/bin/python -c "import requests; print(f\"requests {requests.__version__} imported successfully\")"'
