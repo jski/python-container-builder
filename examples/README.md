@@ -136,7 +136,7 @@ See the Data Science example for details.
 
 - Check the main [README.md](../README.md) for base image documentation
 - Read [TROUBLESHOOTING.md](../TROUBLESHOOTING.md) for common issues
-- See the [3.11–3.14 release workflow](../.github/workflows/build.yml) and the [3.9–3.10 release workflow](../.github/workflows/legacy.yml).
+- See the [release workflow](../.github/workflows/build.yml) and [per-version build and tests](../.github/workflows/image.yml).
 - Open an issue at https://github.com/jski/python-container-builder/issues
 
 ## Contributing Examples

@@ -41,16 +41,16 @@ This project provides pre-built images for multiple Python versions, using a hyb
 |----------------|-----------|---------------|-------------|-------------------|
 | 3.9 | `:3.9` | `python:3.9.<patch>-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
 | 3.10 | `:3.10` | `python:3.10.<patch>-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
-| 3.11 | `:3.11` | `python:3.11-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
-| 3.12 | `:3.12` | `python:3.12-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
-| 3.13 | `:3.13` | `python:3.13-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
-| 3.14 | `:3.14` or `:latest` | `python:3.14-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
+| 3.11 | `:3.11` | `python:3.11.<patch>-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
+| 3.12 | `:3.12` | `python:3.12.<patch>-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
+| 3.13 | `:3.13` | `python:3.13.<patch>-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
+| 3.14 | `:3.14` or `:latest` | `python:3.14.<patch>-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
 
 All supported tags use Debian 12 (Bookworm). When upgrading an existing 3.9 or 3.10 application, change its distroless runtime to Debian 12 and rebuild both stages together.
 
-For 3.9 and 3.10, a daily job checks stable CPython release tags, resolves the matching Bookworm image by exact patch, and publishes each minor independently after both architectures pass. A missing upstream image fails that minor's check and is retried on the next run.
+A daily check compares each minor with the latest stable CPython release and proposes the matching Bookworm image digests in `versions.json`. If an upstream image is missing, the check reports that minor, preserves its previous inputs, and can still propose updates for other minors.
 
-For Python 3.11–3.14, a separate daily check proposes updated Python and Debian digests in `versions.json`. After merge, the release workflow builds or reuses the candidates, tests them and promotes passing images.
+The release workflow builds each minor independently. It tests the exact manifest patch inside the Debian 12 distroless runtime on amd64 and arm64. After merge, each passing minor can publish its own tag. The manifest selects which minor also publishes `:latest`.
 
 Plan the migration to Debian 13 (Trixie) before June 30, 2028.
 

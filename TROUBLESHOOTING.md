@@ -402,7 +402,7 @@ ENTRYPOINT ["/.venv/bin/python3", "-u", "main.py"]
 If you encounter an issue not covered here:
 
 1. **Check the examples** in the main [README.md](README.md)
-2. Review the [3.11–3.14 build workflow](.github/workflows/build.yml) or [3.9–3.10 build workflow](.github/workflows/legacy.yml) for the failing Python minor.
+2. Open the [release workflow](.github/workflows/build.yml) and inspect the build, test, or promotion job for the affected Python minor.
 3. **Open an issue** at https://github.com/jski/python-container-builder/issues with:
    - Your Dockerfile
    - Full error message

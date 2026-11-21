@@ -12,7 +12,9 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v6
-      - run: node scripts/versions.mjs --refresh
+      - id: refresh
+        continue-on-error: true
+        run: node scripts/versions.mjs --refresh
       - uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.PAT_TOKEN || github.token }}
@@ -23,3 +25,6 @@ jobs:
           commit-message: Refresh builder base image digests
           body: Refresh the Python and Debian image inputs used by the build matrix.
           labels: dependencies
+      - name: Report unresolved upstream inputs
+        if: steps.refresh.outcome == 'failure'
+        run: exit 1
