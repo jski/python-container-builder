@@ -1,5 +1,6 @@
 # Build stage: Install dependencies with system build tools
-FROM ghcr.io/jski/python-container-builder:3.11 AS build-venv
+ARG BUILDER_IMAGE=ghcr.io/jski/python-container-builder:3.11
+FROM ${BUILDER_IMAGE} AS build-venv
 
 # Install build dependencies required for NumPy/Pandas compilation
 # These packages are needed to build native extensions

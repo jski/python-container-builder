@@ -1,5 +1,6 @@
 # Build stage: Install dependencies in virtual environment
-FROM ghcr.io/jski/python-container-builder:3.11 AS build-venv
+ARG BUILDER_IMAGE=ghcr.io/jski/python-container-builder:3.11
+FROM ${BUILDER_IMAGE} AS build-venv
 
 COPY requirements.txt /requirements.txt
 RUN uv pip install -r /requirements.txt

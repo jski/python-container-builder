@@ -1,5 +1,6 @@
 # Build stage: Use Poetry to export dependencies
-FROM ghcr.io/jski/python-container-builder:3.11 AS build-venv
+ARG BUILDER_IMAGE=ghcr.io/jski/python-container-builder:3.11
+FROM ${BUILDER_IMAGE} AS build-venv
 
 # Copy Poetry files
 COPY pyproject.toml poetry.lock* /
