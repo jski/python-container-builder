@@ -39,12 +39,12 @@ This project provides pre-built images for multiple Python versions, using a hyb
 
 | Python Version | Image Tag | Python Source | Debian Base | Distroless Runtime |
 |----------------|-----------|---------------|-------------|-------------------|
-| 3.9 | `:3.9` | `python:3.9-slim-bullseye` (3.9.23) | `debian:bullseye-slim` | `gcr.io/distroless/python3-debian11` |
-| 3.10 | `:3.10` | `python:3.10-slim-bullseye` (3.10.18) | `debian:bullseye-slim` | `gcr.io/distroless/python3-debian11` |
-| 3.11 | `:3.11` | `python:3.11-slim-bookworm` (3.11.17) | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
-| 3.12 | `:3.12` | `python:3.12-slim-bookworm` (3.12.15) | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
-| 3.13 | `:3.13` | `python:3.13-slim-bookworm` (3.13.16) | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
-| 3.14 | `:3.14` or `:latest` | `python:3.14-slim-bookworm` (3.14.8) | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
+| 3.9 | `:3.9` | `python:3.9-slim-bullseye` | `debian:bullseye-slim` | `gcr.io/distroless/python3-debian11` |
+| 3.10 | `:3.10` | `python:3.10-slim-bullseye` | `debian:bullseye-slim` | `gcr.io/distroless/python3-debian11` |
+| 3.11 | `:3.11` | `python:3.11-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
+| 3.12 | `:3.12` | `python:3.12-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
+| 3.13 | `:3.13` | `python:3.13-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
+| 3.14 | `:3.14` or `:latest` | `python:3.14-slim-bookworm` | `debian:bookworm-slim` | `gcr.io/distroless/python3-debian12` |
 
 All images support both `linux/amd64` and `linux/arm64` architectures.
 
@@ -72,7 +72,7 @@ This project seeks to:
 - Reduce usage of Github Actions free tier minutes for said projects by doing the most time-intensive part up front here instead.
 - Offer a base image that supports packaging into a final distroless runtime.
 - Provide a clean, customizable Debian base with reliable Python builds.
-- Keep up to date with package updates automatically via nightly builds.
+- Check the supported Python and Debian base image digests daily and propose updates in a pull request.
 - Support both `linux/arm64` and `linux/amd64` architectures.
 - Be publicly available for use without needing to login to a registry.
 - Include modern Python package managers: `uv`, `poetry`, `pipenv`, `pdm`, and `pip`.

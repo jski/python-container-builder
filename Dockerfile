@@ -4,10 +4,12 @@ ARG PYTHON_VERSION=3.14
 ARG DEBIAN_VERSION=bookworm
 
 # Extract Python from official image
-FROM python:${PYTHON_VERSION}-slim-${DEBIAN_VERSION} AS python-source
+ARG PYTHON_IMAGE=python:${PYTHON_VERSION}-slim-${DEBIAN_VERSION}
+ARG DEBIAN_IMAGE=debian:${DEBIAN_VERSION}-slim
+FROM ${PYTHON_IMAGE} AS python-source
 
 # Final stage - clean Debian base with Python copied in
-FROM debian:${DEBIAN_VERSION}-slim
+FROM ${DEBIAN_IMAGE}
 ARG PYTHON_VERSION
 
 LABEL MAINTAINER="jskii <blackdanieljames@gmail.com>"
