@@ -18,7 +18,7 @@ jobs:
       - name: Build candidate and final application images
         run: |
           entry=$(jq -ce '.[] | select(.python_version == "3.11")' versions.json)
-          python_image=$(jq -r '"python:\(.python_version)-slim-\(.debian_version)@\(.python_digest)"' <<< "$entry")
+          python_image=$(jq -r '"python:\(.patch)-slim-\(.debian_version)@\(.python_digest)"' <<< "$entry")
           debian_image=$(jq -r '"debian:\(.debian_version)-slim@\(.debian_digest)"' <<< "$entry")
           docker build --build-arg PYTHON_VERSION=3.11 --build-arg PYTHON_IMAGE="$python_image" \
             --build-arg DEBIAN_IMAGE="$debian_image" -t builder:candidate .
@@ -37,4 +37,4 @@ jobs:
           grep -Fx '    Mean: 3137.78' report.txt
           cid=$(docker run -d -p 127.0.0.1:18000:8000 example:fastapi)
           trap 'docker logs "$cid"; docker rm -f "$cid"' EXIT
-          curl --fail --retry 10 --retry-connrefused --retry-delay 1 http://127.0.0.1:18000/health | jq -e '.status == "healthy"'
+          curl --fail --silent --show-error --max-time 2 --retry 10 --retry-all-errors --retry-delay 1 http://127.0.0.1:18000/health | jq -e '.status == "healthy"'
