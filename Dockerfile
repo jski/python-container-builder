@@ -38,8 +38,9 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 RUN uv venv
 
 ENV VIRTUAL_ENV=/.venv
-ENV PATH="/bin:$VIRTUAL_ENV/bin:$PATH"
+ENV PATH="$VIRTUAL_ENV/bin:/opt/builder-tools/bin:$PATH"
 
-# Install pip in the virtualenv for standard pip usage
-# Then install other modern Python package managers
-RUN uv pip install --no-cache pip poetry pipenv pdm
+# Keep the application environment portable when consumers copy /.venv.
+RUN uv pip install --no-cache pip && \
+    uv venv /opt/builder-tools && \
+    uv pip install --no-cache --python /opt/builder-tools/bin/python poetry pipenv pdm
