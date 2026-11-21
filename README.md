@@ -1,7 +1,14 @@
 # Python Container Builder
 [![Build & Deploy](https://github.com/jski/python-container-builder/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/jski/python-container-builder/actions/workflows/build.yml)
-[![Python Versions](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue)](https://github.com/jski/python-container-builder)
+[![Python 3.9 patch](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fjski%2Fpython-container-builder%2Fmain%2Fversions.json&query=%24%5B0%5D.patch&label=Python&color=blue)](versions.json)
+[![Python 3.10 patch](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fjski%2Fpython-container-builder%2Fmain%2Fversions.json&query=%24%5B1%5D.patch&label=Python&color=blue)](versions.json)
+[![Python 3.11 patch](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fjski%2Fpython-container-builder%2Fmain%2Fversions.json&query=%24%5B2%5D.patch&label=Python&color=blue)](versions.json)
+[![Python 3.12 patch](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fjski%2Fpython-container-builder%2Fmain%2Fversions.json&query=%24%5B3%5D.patch&label=Python&color=blue)](versions.json)
+[![Python 3.13 patch](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fjski%2Fpython-container-builder%2Fmain%2Fversions.json&query=%24%5B4%5D.patch&label=Python&color=blue)](versions.json)
+[![Python 3.14 patch](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fjski%2Fpython-container-builder%2Fmain%2Fversions.json&query=%24%5B5%5D.patch&label=Python&color=blue)](versions.json)
 [![Platform Support](https://img.shields.io/badge/platform-linux%2Famd64%20%7C%20linux%2Farm64-blue)](https://github.com/jski/python-container-builder)
+
+<!-- Python badges read the patch values in versions.json by row index. -->
 
 A shortcut to packaging your Python code with requirement dependencies into a Distroless image.
 
@@ -48,7 +55,7 @@ This project provides pre-built images for multiple Python versions, using a hyb
 
 All supported tags use Debian 12 (Bookworm). When upgrading an existing 3.9 or 3.10 application, change its distroless runtime to Debian 12 and rebuild both stages together.
 
-A daily check compares each minor with the latest stable CPython release and proposes the matching Bookworm image digests in `versions.json`. If an upstream image is missing, the check reports that minor, preserves its previous inputs, and can still propose updates for other minors.
+The Python badges show the exact patches pinned for builds in `versions.json`. A daily check compares each minor with the latest stable CPython release and proposes the matching Bookworm image digests in that file. If an upstream image is missing, the check reports that minor, preserves its previous inputs, and can still propose updates for other minors.
 
 The release workflow builds each minor independently. It tests the exact manifest patch inside the Debian 12 distroless runtime on amd64 and arm64. After merge, each passing minor can publish its own tag. The manifest selects which minor also publishes `:latest`.
 
@@ -70,7 +77,7 @@ This approach gives you the reliability of official Python builds while maintain
 
 This project prioritizes security through:
 - 🏗️ **Official Base Images**: The build uses official Python and Debian image digests.
-- 🔄 **Automated Dependency Updates**: [Dependabot](https://github.com/dependabot) monitors base images and GitHub Actions for security updates
+- 🔄 **Automated Dependency Updates**: The daily version check tracks the pinned Python and Debian images. [Dependabot](https://github.com/dependabot) tracks Dockerfile image references and GitHub Actions.
 - 🔒 **Distroless Runtime**: The examples copy the Python installation and virtual environment into the Debian 12 distroless runtime.
 - 📦 **Isolated Dependencies**: Virtual environment isolation ensures clean dependency management
 
@@ -116,7 +123,7 @@ Use the Debian 12 distroless runtime for every supported minor. The `:latest` al
 1. Choose your Python version and declare the corresponding base image as the top FROM line in your Dockerfile (e.g., `:3.12`, `:3.14`, or `:latest`).
 2. Copy your requirements or configuration files from your application repo, and run `uv pip install` (or `pip install`) from a virtualenv.
 3. Declare the final distroless container image you'll use for runtime, using the Debian 12 runtime for every supported Python version.
-4. Copy the virtualenv you built in the first phase of the build.
+4. Copy the Python installation (`/usr/local`) and virtual environment (`/.venv`) from the builder into the final image.
 5. Move your application files to the proper location on the filesystem, and setup your workdir and entrypoint. All done!
 
 ### Package Manager Options
