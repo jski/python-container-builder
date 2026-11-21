@@ -109,8 +109,9 @@ ENTRYPOINT ["/.venv/bin/python3", "-u", "app.py"]
 Choose your Python version by changing the tag:
 - `:3.12` - Python 3.12 (recommended for most users)
 - `:3.14` or `:latest` - Python 3.14 (newest features)
+- `:3.13` - Python 3.13
 - `:3.11` - Python 3.11 (long-term stable)
-- `:3.9`, `:3.10` - Older versions (use `debian11` distroless)
+- `:3.9`, `:3.10` - Older versions (use `debian12` distroless)
 
 ### Adding System Dependencies
 If your packages need compilation:
@@ -135,7 +136,7 @@ See the Data Science example for details.
 
 - Check the main [README.md](../README.md) for base image documentation
 - Read [TROUBLESHOOTING.md](../TROUBLESHOOTING.md) for common issues
-- Review the [GitHub Actions workflow](../.github/workflows/nightly.yml) to see how images are built
+- See the [release workflow](../.github/workflows/build.yml) and [per-version build and tests](../.github/workflows/image.yml).
 - Open an issue at https://github.com/jski/python-container-builder/issues
 
 ## Contributing Examples
